@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#FF5500">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>FYL Fit</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    :root{
+      --bg:#0D0D0D;--card:#161616;--border:#252525;
+      --text:#F0F0F0;--muted:#777;
+      --accent:#FF5500;
+      --green:#00C896;--blue:#00A8FF;--purple:#9C27B0;--gold:#FFD700;
+      --warn-bg:#1A1200;--warn-border:#332500;--warn-text:#FFB800;
+    }
+    html,body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;min-height:100%;overflow-x:hidden}
+
+    /* HEADER */
+    .hdr{background:#111;border-bottom:1px solid var(--border);padding:env(safe-area-inset-top,20px) 20px 14px;text-align:center;position:sticky;top:0;z-index:99}
+    .hdr-eyebrow{font-size:10px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;margin-bottom:4px}
+    .hdr-title{font-size:20px;font-weight:900;letter-spacing:-0.5px}
+    .hdr-sub{font-size:11px;color:var(--muted);margin-top:3px}
+
+    /* WEEK TABS */
+    .week-strip{display:flex;gap:8px;padding:14px 16px;background:#111;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid var(--border)}
+    .week-strip::-webkit-scrollbar{display:none}
+    .wtab{flex:1;min-width:72px;padding:10px 6px 8px;border-radius:12px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;text-align:center;transition:all .2s}
+    .wtab.active{border-color:var(--wc);background:color-mix(in srgb,var(--wc) 14%,transparent);color:var(--wc)}
+    .wtab-num{font-size:17px;font-weight:900;display:block;margin-bottom:1px}
+    .wtab-name{font-size:10px;display:block}
+    .wtab-prog{font-size:9px;opacity:.65;margin-top:2px;display:block}
+
+    /* DAY STRIP */
+    .day-strip{display:flex;gap:7px;padding:12px 16px;overflow-x:auto;scrollbar-width:none;background:#0D0D0D}
+    .day-strip::-webkit-scrollbar{display:none}
+    .dbtn{flex-shrink:0;padding:7px 11px;border-radius:10px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;text-align:center;transition:all .2s;position:relative}
+    .dbtn.active{border-color:var(--dc);background:color-mix(in srgb,var(--dc) 14%,transparent);color:var(--dc)}
+    .dbtn.done::after{content:'✓';position:absolute;top:-7px;right:-7px;width:16px;height:16px;background:var(--green);border-radius:50%;font-size:9px;display:flex;align-items:center;justify-content:center;color:#000;font-weight:900}
+    .dbtn-emoji{font-size:14px;display:block;margin-bottom:1px}
+    .dbtn-label{font-size:10px}
+
+    /* CONTENT */
+    .content{padding:14px 15px 100px}
+
+    /* WEEK BADGE */
+    .wbadge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;margin-bottom:12px}
+
+    /* DAY CARD */
+    .dcard{background:var(--card);border-radius:16px;padding:18px;margin-bottom:10px;border:1px solid var(--border)}
+    .dcard-head{display:flex;justify-content:space-between;align-items:flex-start}
+    .dcard-emoji{font-size:26px;margin-bottom:3px}
+    .dcard-name{font-size:23px;font-weight:900}
+    .dcard-theme{font-size:13px;color:#AAA;margin-top:2px}
+    .dcard-right{text-align:right;flex-shrink:0}
+    .meta-lbl{font-size:10px;color:var(--muted);margin-bottom:3px}
+    .dcard-dur{font-size:17px;font-weight:800}
+    .int-row{display:flex;gap:4px;align-items:center;justify-content:flex-end;margin-top:6px}
+    .pip{width:18px;height:5px;border-radius:3px;transition:background .2s}
+    .int-lbl{font-size:10px;color:var(--muted);margin-left:3px}
+    .warn{margin-top:12px;padding:9px 12px;background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:10px;font-size:12px;color:var(--warn-text);line-height:1.5}
+
+    /* EXERCISES */
+    .exlist{display:flex;flex-direction:column;gap:8px;margin:10px 0}
+    .excard{background:var(--card);border-radius:12px;padding:12px 13px;border:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+    .ex-l{flex:1}
+    .ex-top{display:flex;align-items:center;gap:8px}
+    .exnum{width:22px;height:22px;border-radius:6px;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .exname{font-size:13px;font-weight:600;line-height:1.3}
+    .exnote{font-size:11px;color:#606060;font-style:italic;margin-top:4px;margin-left:30px;line-height:1.4}
+    .exreps{flex-shrink:0;font-size:11px;font-weight:700;padding:3px 9px;border-radius:7px;white-space:nowrap;align-self:center}
+
+    /* CIRCUIT */
+    .circuit{background:#111;border:1px dashed #2E2E2E;border-radius:10px;padding:10px 14px;text-align:center;font-size:12px;color:var(--muted);margin:10px 0}
+
+    /* DONE BUTTON */
+    .done-btn{width:100%;padding:14px;border-radius:14px;border:none;font-size:14px;font-weight:700;cursor:pointer;margin-top:10px;transition:all .2s;letter-spacing:0.3px}
+    .done-btn.undone{background:var(--accent);color:#fff}
+    .done-btn.isdone{background:var(--green);color:#000}
+
+    /* PROGRESS BAR */
+    .prog-wrap{background:#1A1A1A;border-radius:8px;height:6px;margin-top:10px;overflow:hidden}
+    .prog-fill{height:100%;border-radius:8px;transition:width .5s ease}
+
+    /* TIPS */
+    .tips{background:var(--card);border-radius:14px;padding:14px 15px;border:1px solid var(--border);margin-top:10px}
+    .tips-ttl{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:9px}
+    .tip{display:flex;gap:7px;margin-bottom:5px;font-size:12px;color:#AAA;line-height:1.5}
+    .ta{color:var(--accent);flex-shrink:0}
+
+    /* WEEK OVERVIEW */
+    .overview{background:var(--card);border-radius:14px;padding:14px 15px;border:1px solid var(--border);margin-bottom:10px}
+    .ov-ttl{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:9px}
+    .ov-subtitle{font-size:12px;color:#AAA;line-height:1.5}
+  </style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-eyebrow">Programme Mensuel</div>
+  <div class="hdr-title">FYL FIT 💪</div>
+  <div class="hdr-sub">Fabien · 34 ans · 86 kg · Gras viscéral</div>
+</div>
+
+<div class="week-strip" id="weekStrip"></div>
+<div class="day-strip" id="dayStrip"></div>
+<div class="content" id="content"></div>
+
+<script>
+// ══════════════════════════════════════════════════
+// DONNÉES DU PROGRAMME — 4 SEMAINES
+// ══════════════════════════════════════════════════
+
+const W = [
+
+// ──────────────────────────────────────────────────
+// SEMAINE 1 — FONDATIONS
+// ──────────────────────────────────────────────────
+{num:1,label:'S1',title:'FONDATIONS',subtitle:'Apprendre les formes — 2 circuits — reps modérées',color:'#4CAF50',days:[
+  {day:'LUNDI',theme:'Poitrine & Triceps',emoji:'🔥',intensity:2,color:'#FF5500',dur:'15 min',
+   ex:[
+     {n:'Jumping jacks',r:'20 reps',note:'échauffement'},
+     {n:'Pompes (genoux si besoin)',r:'10 reps',note:null},
+     {n:'Mountain climbers',r:'20 reps',note:null},
+     {n:'Dips triceps sur chaise',r:'15 reps',note:null},
+     {n:'Planche avant',r:'30 sec',note:null},
+   ],
+   circuit:'× 2 circuits — 45s de repos entre chaque',warn:null},
+
+  {day:'MARDI',theme:'Dos & Biceps + Coiffe',emoji:'🛡️',intensity:2,color:'#00A8FF',dur:'15 min',
+   ex:[
+     {n:'Cercles d\'épaules avant + arrière',r:'30 reps',note:null},
+     {n:'Rowing haltère',r:'12 reps / bras',note:'dos plat, coude tiré vers l\'arrière'},
+     {n:'Curl haltère biceps',r:'12 reps / bras',note:null},
+     {n:'Rotation externe haltère légère',r:'12 reps / bras',note:'coude collé au corps — coiffe protégée'},
+     {n:'Crunch abdos',r:'20 reps',note:null},
+   ],
+   circuit:'× 2 circuits — 45s de repos',warn:'⚠️ Coiffe : haltère très légère, amplitude contrôlée, aucune douleur tolérée'},
+
+  {day:'MERCREDI',theme:'Core & Mobilité',emoji:'🧘',intensity:1,color:'#00C896',dur:'15 min',
+   ex:[
+     {n:'Crunch basique',r:'20 reps',note:null},
+     {n:'Crunch bicycle',r:'20 reps',note:null},
+     {n:'Planche avant',r:'30 sec',note:null},
+     {n:'Superman',r:'15 reps',note:'bras + jambes décollés simultanément, tenir 2s'},
+     {n:'Étirements sciatique',r:'5 min',note:'figure 4 allongée — tenir 30 sec par côté'},
+   ],
+   circuit:'× 1 circuit — qualité avant vitesse',warn:'⚠️ Sciatique : priorité aux étirements, stop immédiat si douleur'},
+
+  {day:'JEUDI',theme:'Full Body Cardio',emoji:'⚡',intensity:3,color:'#FF5500',dur:'15 min',
+   ex:[
+     {n:'Jumping jacks',r:'25 reps',note:null},
+     {n:'Burpees modifiés (sans saut)',r:'12 reps',note:'alternative : pompe + step-up si sciatique'},
+     {n:'Squats basiques',r:'20 reps',note:null},
+     {n:'Mountain climbers',r:'25 reps',note:null},
+     {n:'Planche avant',r:'30 sec',note:null},
+   ],
+   circuit:'× 2 circuits — 60s de repos',warn:'⚠️ Sciatique : pas de saut, atterrissage genoux fléchis'},
+
+  {day:'VENDREDI',theme:'Épaules & Bras',emoji:'💜',intensity:2,color:'#9C27B0',dur:'15 min',
+   ex:[
+     {n:'Cercles d\'épaules',r:'20 reps',note:null},
+     {n:'Presse épaules haltère assis (léger)',r:'12 reps',note:'pas de douleur en arc'},
+     {n:'Élévations frontales haltère',r:'12 reps',note:'bras tendu, charge légère'},
+     {n:'Curl haltère biceps',r:'15 reps / bras',note:null},
+     {n:'Dips triceps chaise',r:'15 reps',note:null},
+   ],
+   circuit:'× 2 circuits — 45s de repos',warn:'⚠️ Coiffe : élévations légères — stop si douleur en arc'},
+
+  {day:'SAMEDI',theme:'Cardio doux & Core',emoji:'🏃',intensity:2,color:'#00A8FF',dur:'20 min',
+   ex:[
+     {n:'Montées de genoux sur place',r:'30 reps',note:null},
+     {n:'Squats sumo',r:'20 reps',note:'pieds écartés, orteils vers l\'extérieur'},
+     {n:'Jumping jacks',r:'30 reps',note:null},
+     {n:'Crunch abdos',r:'25 reps',note:null},
+     {n:'Planche latérale',r:'30 sec / côté',note:null},
+   ],
+   circuit:'× 2 circuits + 5 min d\'étirements',warn:null},
+
+  {day:'DIMANCHE',theme:'Récupération active',emoji:'🌿',intensity:0,color:'#888',dur:'15 min',
+   ex:[
+     {n:'Étirements complets (dos, ischio, pecto)',r:'10 min',note:null},
+     {n:'Mobilité épaules douce',r:'3 min',note:'bras croisé devant + cercles lents'},
+     {n:'Étirements sciatique',r:'5 min',note:'figure 4, genou croisé sur poitrine'},
+     {n:'Marche 20 min (si possible)',r:'optionnel',note:'brûle les graisses en douceur'},
+   ],
+   circuit:'Pas de circuit — repos actif uniquement',warn:null},
+]},
+
+// ──────────────────────────────────────────────────
+// SEMAINE 2 — CONSTRUCTION
+// ──────────────────────────────────────────────────
+{num:2,label:'S2',title:'CONSTRUCTION',subtitle:'+30% volume — 3 circuits — tempo 2s descente',color:'#00A8FF',days:[
+  {day:'LUNDI',theme:'Poitrine & Triceps +',emoji:'🔥',intensity:3,color:'#FF5500',dur:'18 min',
+   ex:[
+     {n:'Jumping jacks',r:'25 reps',note:null},
+     {n:'Pompes pieds au sol (tempo 2s)',r:'12 reps',note:'2 secondes de descente contrôlée'},
+     {n:'Mountain climbers',r:'25 reps',note:null},
+     {n:'Dips triceps chaise',r:'20 reps',note:null},
+     {n:'Planche avant',r:'40 sec',note:null},
+   ],
+   circuit:'× 3 circuits — 45s de repos',warn:null},
+
+  {day:'MARDI',theme:'Dos & Biceps (charge +)',emoji:'🛡️',intensity:3,color:'#00A8FF',dur:'18 min',
+   ex:[
+     {n:'Cercles d\'épaules',r:'30 reps',note:null},
+     {n:'Rowing haltère (légèrement plus lourd)',r:'15 reps / bras',note:null},
+     {n:'Curl haltère',r:'15 reps / bras',note:null},
+     {n:'Rotation externe haltère',r:'12 reps / bras',note:'charge INCHANGÉE — coiffe toujours protégée'},
+     {n:'Crunch abdos',r:'25 reps',note:null},
+   ],
+   circuit:'× 3 circuits — 45s de repos',warn:'⚠️ Coiffe : ne pas augmenter la charge sur les rotations'},
+
+  {day:'MERCREDI',theme:'Core renforcé',emoji:'🧘',intensity:2,color:'#00C896',dur:'15 min',
+   ex:[
+     {n:'Crunch bicycle (lent 2s/côté)',r:'25 reps',note:'contrôle total, pas de vitesse'},
+     {n:'Crunch basique',r:'25 reps',note:null},
+     {n:'Planche avant',r:'40 sec',note:null},
+     {n:'Leg raises allongé',r:'15 reps',note:'jambes tendues, descente lente'},
+     {n:'Superman',r:'20 reps',note:null},
+     {n:'Étirements sciatique',r:'5 min',note:'figure 4 + étirement ischio-jambier'},
+   ],
+   circuit:'× 1 circuit',warn:'⚠️ Sciatique : leg raises → stop si douleur lombaire'},
+
+  {day:'JEUDI',theme:'Full Body Circuit+',emoji:'⚡',intensity:3,color:'#FF5500',dur:'18 min',
+   ex:[
+     {n:'Jumping jacks',r:'30 reps',note:null},
+     {n:'Burpees modifiés',r:'15 reps',note:null},
+     {n:'Fentes statiques',r:'20 reps',note:'pas de fentes marchées — lombaires préservées'},
+     {n:'Mountain climbers',r:'25 reps',note:null},
+     {n:'Planche avant',r:'40 sec',note:null},
+   ],
+   circuit:'× 3 circuits — 60s de repos',warn:null},
+
+  {day:'VENDREDI',theme:'Épaules & Bras +',emoji:'💜',intensity:3,color:'#9C27B0',dur:'18 min',
+   ex:[
+     {n:'Cercles d\'épaules',r:'20 reps',note:null},
+     {n:'Presse haltère assis',r:'15 reps',note:null},
+     {n:'Élévations frontales',r:'15 reps',note:null},
+     {n:'Curl haltère',r:'20 reps / bras',note:null},
+     {n:'Dips triceps chaise',r:'20 reps',note:null},
+   ],
+   circuit:'× 3 circuits — 45s de repos',warn:'⚠️ Coiffe : stop si douleur en arc sur presse / élévations'},
+
+  {day:'SAMEDI',theme:'Cardio intensifié',emoji:'🏃',intensity:3,color:'#00A8FF',dur:'20 min',
+   ex:[
+     {n:'Montées de genoux rapides',r:'40 reps',note:null},
+     {n:'Squats sumo',r:'25 reps',note:null},
+     {n:'Jumping jacks',r:'35 reps',note:null},
+     {n:'Fentes statiques',r:'20 reps',note:null},
+     {n:'Crunch abdos',r:'30 reps',note:null},
+   ],
+   circuit:'× 2 circuits + 5 min étirements',warn:null},
+
+  {day:'DIMANCHE',theme:'Récupération active',emoji:'🌿',intensity:0,color:'#888',dur:'15 min',
+   ex:[
+     {n:'Étirements complets',r:'12 min',note:null},
+     {n:'Mobilité épaules',r:'3 min',note:null},
+     {n:'Étirements sciatique',r:'5 min',note:null},
+     {n:'Marche recommandée',r:'20–30 min',note:'actif = plus de graisse brûlée'},
+   ],
+   circuit:'Repos actif — pas de circuit',warn:null},
+]},
+
+// ──────────────────────────────────────────────────
+// SEMAINE 3 — INTENSITÉ
+// ──────────────────────────────────────────────────
+{num:3,label:'S3',title:'INTENSITÉ',subtitle:'Variations avancées — supersets — tempo 3s',color:'#FF5500',days:[
+  {day:'LUNDI',theme:'Push Avancé',emoji:'🔥',intensity:4,color:'#FF5500',dur:'18 min',
+   ex:[
+     {n:'Pompes déclinées (pieds sur chaise)',r:'12 reps',note:'cible le haut de la poitrine'},
+     {n:'Pompes diamant (mains jointives)',r:'10 reps',note:'maximum triceps'},
+     {n:'Mountain climbers',r:'30 reps',note:null},
+     {n:'Dips chaise (3s de descente)',r:'20 reps',note:'tempo lent = plus intense'},
+     {n:'Planche avant',r:'45 sec',note:null},
+   ],
+   circuit:'× 3 circuits — 45s de repos',warn:null},
+
+  {day:'MARDI',theme:'Pull Superset',emoji:'🛡️',intensity:4,color:'#00A8FF',dur:'18 min',
+   ex:[
+     {n:'SUPERSET : Rowing + Curl (même bras)',r:'15+15 reps',note:'enchaîner sans repos entre les 2 mouvements'},
+     {n:'Rotation externe haltère',r:'12 reps / bras',note:'toujours légère — coiffe protégée en priorité'},
+     {n:'Pompes prise large',r:'15 reps',note:null},
+     {n:'Crunch abdos',r:'30 reps',note:null},
+   ],
+   circuit:'× 3 circuits — 60s après chaque circuit',warn:'⚠️ Coiffe : le superset NE concerne PAS les rotations externes'},
+
+  {day:'MERCREDI',theme:'Core Avancé',emoji:'🧘',intensity:2,color:'#00C896',dur:'15 min',
+   ex:[
+     {n:'Crunch bicycle lent (3s / côté)',r:'20 reps',note:null},
+     {n:'Planche avec tap d\'épaule',r:'20 taps',note:'en planche, toucher l\'épaule opposée alternativement'},
+     {n:'Leg raises lent (3s descente)',r:'15 reps',note:null},
+     {n:'Superman pulsé (tenir 2s)',r:'20 reps',note:'renforce lombaires en douceur'},
+     {n:'Planche latérale',r:'35 sec / côté',note:null},
+     {n:'Étirements sciatique',r:'5 min',note:null},
+   ],
+   circuit:'× 1 circuit — qualité > vitesse',warn:'⚠️ Sciatique : leg raises → stop si douleur lombaire'},
+
+  {day:'JEUDI',theme:'HIIT Circuit',emoji:'⚡',intensity:4,color:'#FF5500',dur:'15 min',
+   ex:[
+     {n:'Burpees (avec saut si sciatique OK)',r:'15 reps',note:'sinon burpees step-back (pas de saut)'},
+     {n:'Pompes',r:'20 reps',note:null},
+     {n:'Squats sautés',r:'20 reps',note:'atterrissage souple, genoux fléchis'},
+     {n:'Mountain climbers rapides',r:'30 reps',note:null},
+     {n:'Planche avant',r:'45 sec',note:null},
+   ],
+   circuit:'× 3 circuits — 60s de repos — max intensity',warn:'⚠️ Sciatique : squats sautés → squats normaux si douleur'},
+
+  {day:'VENDREDI',theme:'Épaules Complexe',emoji:'💜',intensity:3,color:'#9C27B0',dur:'18 min',
+   ex:[
+     {n:'Arnold press haltère',r:'12 reps',note:'paume vers toi en bas, rotation vers l\'extérieur en montant'},
+     {n:'Élévations latérales légères (45° max)',r:'12 reps',note:'amplitude réduite — coiffe protégée'},
+     {n:'Curl marteau (poignet neutre)',r:'15 reps / bras',note:null},
+     {n:'Dips chaise (3s)',r:'20 reps',note:null},
+     {n:'Pompes prise large',r:'15 reps',note:null},
+   ],
+   circuit:'× 3 circuits — 45s de repos',warn:'⚠️ Coiffe : élévations latérales à 45° MAX — aucune douleur tolérée'},
+
+  {day:'SAMEDI',theme:'Cardio Max',emoji:'🏃',intensity:4,color:'#00A8FF',dur:'20 min',
+   ex:[
+     {n:'Jumping jacks',r:'50 reps',note:null},
+     {n:'Montées de genoux rapides',r:'40 reps',note:null},
+     {n:'Fentes sautées (ou statiques)',r:'20 reps',note:'saut seulement si sciatique OK'},
+     {n:'Mountain climbers',r:'30 reps',note:null},
+     {n:'Crunch abdos',r:'35 reps',note:null},
+   ],
+   circuit:'× 2 circuits + 5 min étirements',warn:'⚠️ Sciatique : fentes sautées → fentes statiques si douleur'},
+
+  {day:'DIMANCHE',theme:'Récupération méritée',emoji:'🌿',intensity:0,color:'#888',dur:'15 min',
+   ex:[
+     {n:'Étirements complets',r:'15 min',note:'dos, ischio, pecto, épaules'},
+     {n:'Mobilité épaules profonde',r:'5 min',note:'cercles lents + bras en croix'},
+     {n:'Étirements sciatique',r:'5 min',note:null},
+     {n:'Bain chaud recommandé',r:'—',note:'relâche les muscles après la semaine intense'},
+   ],
+   circuit:'Repos total — semaine intense derrière toi',warn:null},
+]},
+
+// ──────────────────────────────────────────────────
+// SEMAINE 4 — PEAK
+// ──────────────────────────────────────────────────
+{num:4,label:'S4',title:'PEAK',subtitle:'Lun–Jeu : tout donner · Ven–Dim : déload & bilan',color:'#FF1744',days:[
+  {day:'LUNDI',theme:'Push Peak',emoji:'🔥',intensity:4,color:'#FF5500',dur:'20 min',
+   ex:[
+     {n:'Pompes déclinées',r:'15 reps',note:null},
+     {n:'Pompes pieds au sol drop-set',r:'15 puis 10 genoux',note:'enchaîner sans pause entre les deux'},
+     {n:'Pompes diamant',r:'12 reps',note:null},
+     {n:'Mountain climbers',r:'35 reps',note:null},
+     {n:'Planche avant',r:'60 sec',note:'ton record du mois !'},
+   ],
+   circuit:'× 3 circuits — 45s de repos — TOUT DONNER',warn:null},
+
+  {day:'MARDI',theme:'Pull Peak (charge max)',emoji:'🛡️',intensity:4,color:'#00A8FF',dur:'20 min',
+   ex:[
+     {n:'Rowing haltère (charge maximale)',r:'20 reps / bras',note:'ton record de rowing ce mois'},
+     {n:'Curl haltère',r:'20 reps / bras',note:null},
+     {n:'Rotation externe haltère',r:'12 reps / bras',note:'charge INCHANGÉE malgré le peak'},
+     {n:'Pompes prise large',r:'20 reps',note:null},
+     {n:'Crunch',r:'35 reps',note:null},
+   ],
+   circuit:'× 3 circuits — 60s de repos',warn:'⚠️ Coiffe : malgré le "peak", rotations = légèreté absolue'},
+
+  {day:'MERCREDI',theme:'Core Peak',emoji:'🧘',intensity:3,color:'#00C896',dur:'18 min',
+   ex:[
+     {n:'Crunch bicycle lent',r:'30 reps',note:null},
+     {n:'Planche avec tap d\'épaule',r:'30 taps',note:null},
+     {n:'Leg raises',r:'20 reps',note:null},
+     {n:'Superman pulsé',r:'25 reps',note:null},
+     {n:'Planche latérale',r:'45 sec / côté',note:null},
+     {n:'Étirements sciatique',r:'5 min',note:'obligatoire en semaine 4'},
+   ],
+   circuit:'× 1 circuit complet',warn:null},
+
+  {day:'JEUDI',theme:'Full Body PEAK 🏆',emoji:'⚡',intensity:4,color:'#FF5500',dur:'20 min',
+   ex:[
+     {n:'Burpees',r:'20 reps',note:null},
+     {n:'Pompes',r:'25 reps',note:null},
+     {n:'Squats sautés',r:'25 reps',note:null},
+     {n:'Mountain climbers',r:'40 reps',note:null},
+     {n:'Planche avant',r:'60 sec',note:null},
+   ],
+   circuit:'× 3 circuits — 60s de repos — LA SÉANCE DU MOIS',warn:'⚠️ Sciatique : écoute ton corps, pas d\'héroïsme'},
+
+  {day:'VENDREDI',theme:'Déload actif',emoji:'😮‍💨',intensity:1,color:'#888',dur:'12 min',
+   ex:[
+     {n:'Pompes sur genoux',r:'10 reps',note:'récupération — très léger'},
+     {n:'Squats lents',r:'15 reps',note:null},
+     {n:'Planche',r:'30 sec',note:null},
+     {n:'Curl haltère très léger',r:'12 reps',note:null},
+     {n:'Crunch',r:'20 reps',note:null},
+   ],
+   circuit:'× 1 circuit doux — bien-être uniquement',warn:null},
+
+  {day:'SAMEDI',theme:'Mobilité & Bilan',emoji:'🌿',intensity:0,color:'#888',dur:'20 min',
+   ex:[
+     {n:'Étirements complets',r:'15 min',note:'le mois entier ressenti dans les muscles'},
+     {n:'Mobilité épaules profonde',r:'5 min',note:null},
+     {n:'Étirements sciatique',r:'5 min',note:null},
+     {n:'Marche 30 min',r:'recommandée',note:null},
+   ],
+   circuit:'Récupération totale',warn:null},
+
+  {day:'DIMANCHE',theme:'Bilan du mois',emoji:'🏆',intensity:0,color:'#FFD700',dur:'—',
+   ex:[
+     {n:'Pesée + tour de taille',r:'mesure',note:'compare avec le Jour 1 — la différence est là'},
+     {n:'Test : pompes max en 1 série',r:'combien ?',note:'note ton record vs semaine 1'},
+     {n:'Test : planche tenue max',r:'chronomètre',note:'ton nouveau record'},
+     {n:'Repos complet',r:'—',note:'tu as fait les 28 jours 💪'},
+   ],
+   circuit:'Bilan — pas d\'entraînement',warn:null},
+]},
+
+]; // fin WEEKS
+
+// ══════════════════════════════════════════════════
+// STATE + STORAGE
+// ══════════════════════════════════════════════════
+
+let cw = 0, cd = 0;
+let done = new Set(JSON.parse(localStorage.getItem('fyl_done')||'[]'));
+
+const save = () => localStorage.setItem('fyl_done', JSON.stringify([...done]));
+const id   = (w,d) => `W${w+1}D${d+1}`;
+
+const INT_LABELS = ['Repos','Léger','Modéré','Intense','Maximum'];
+
+// ══════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════
+
+function renderWeeks() {
+  document.getElementById('weekStrip').innerHTML = W.map((w,i)=>{
+    const n = w.days.filter((_,d)=>done.has(id(i,d))).length;
+    const pct = Math.round(n/w.days.length*100);
+    return `<button class="wtab${i===cw?' active':''}" style="--wc:${w.color}" onclick="selWeek(${i})">
+      <span class="wtab-num">${w.label}</span>
+      <span class="wtab-name">${w.title}</span>
+      <span class="wtab-prog">${pct}% complété</span>
+    </button>`;
+  }).join('');
+}
+
+function renderDays() {
+  const week = W[cw];
+  document.getElementById('dayStrip').innerHTML = week.days.map((d,i)=>{
+    const isDone = done.has(id(cw,i));
+    return `<button class="dbtn${i===cd?' active':''}${isDone?' done':''}" style="--dc:${d.color}" onclick="selDay(${i})">
+      <span class="dbtn-emoji">${d.emoji}</span>
+      <span class="dbtn-label">${d.day.slice(0,3)}</span>
+    </button>`;
+  }).join('');
+}
+
+function renderContent() {
+  const week = W[cw];
+  const day  = week.days[cd];
+  const did  = id(cw,cd);
+  const isDone = done.has(did);
+
+  // progress this week
+  const doneN = week.days.filter((_,i)=>done.has(id(cw,i))).length;
+  const pct = Math.round(doneN/week.days.length*100);
+
+  const pips = [1,2,3,4].map(i=>
+    `<div class="pip" style="background:${i<=day.intensity?day.color:'#2A2A2A'}"></div>`
+  ).join('');
+
+  const exCards = day.ex.map((ex,i)=>`
+    <div class="excard">
+      <div class="ex-l">
+        <div class="ex-top">
+          <div class="exnum" style="background:${day.color}22;color:${day.color}">${i+1}</div>
+          <div class="exname">${ex.n}</div>
+        </div>
+        ${ex.note?`<div class="exnote">${ex.note}</div>`:''}
+      </div>
+      <div class="exreps" style="background:${day.color}1A;color:${day.color}">${ex.r}</div>
+    </div>`).join('');
+
+  document.getElementById('content').innerHTML = `
+    <div class="wbadge" style="background:${week.color}1A;color:${week.color}">
+      Semaine ${week.num} · ${week.title}
+    </div>
+
+    <div class="overview">
+      <div class="ov-ttl">Objectif de la semaine</div>
+      <div class="ov-subtitle">${week.subtitle}</div>
+      <div class="prog-wrap" style="margin-top:10px">
+        <div class="prog-fill" style="width:${pct}%;background:${week.color}"></div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:5px">${doneN} / ${week.days.length} séances validées</div>
+    </div>
+
+    <div class="dcard" style="border-color:${day.color}44">
+      <div class="dcard-head">
+        <div>
+          <div class="dcard-emoji">${day.emoji}</div>
+          <div class="dcard-name" style="color:${day.color}">${day.day}</div>
+          <div class="dcard-theme">${day.theme}</div>
+        </div>
+        <div class="dcard-right">
+          <div class="meta-lbl">Durée</div>
+          <div class="dcard-dur">${day.dur}</div>
+          <div class="meta-lbl" style="margin-top:8px">Intensité</div>
+          <div class="int-row">${pips}<span class="int-lbl">${INT_LABELS[day.intensity]}</span></div>
+        </div>
+      </div>
+      ${day.warn?`<div class="warn">${day.warn}</div>`:''}
+    </div>
+
+    <div class="exlist">${exCards}</div>
+
+    <div class="circuit">🔁 ${day.circuit}</div>
+
+    <button class="done-btn ${isDone?'isdone':'undone'}" onclick="toggleDone()">
+      ${isDone?'✅  Séance validée — Bien joué !':'✓  Marquer comme terminée'}
+    </button>
+
+    <div class="tips">
+      <div class="tips-ttl">Rappels clés</div>
+      <div class="tip"><span class="ta">→</span><span>Expire à l'effort, inspire au retour</span></div>
+      <div class="tip"><span class="ta">→</span><span>Hydrate-toi avant même une courte séance</span></div>
+      <div class="tip"><span class="ta">→</span><span>Sciatique = stop immédiat + figure 4 au sol</span></div>
+      <div class="tip"><span class="ta">→</span><span>Coiffe : douleur en arc = réduire l'amplitude immédiatement</span></div>
+      <div class="tip"><span class="ta">→</span><span>Le gras viscéral fond avec la régularité, pas l'intensité seule</span></div>
+    </div>
+  `;
+}
+
+function render() { renderWeeks(); renderDays(); renderContent(); }
+
+// ══════════════════════════════════════════════════
+// ACTIONS
+// ══════════════════════════════════════════════════
+
+function selWeek(i) { cw=i; cd=0; render(); window.scrollTo(0,0); }
+function selDay(i)  { cd=i; render(); }
+function toggleDone() {
+  const did = id(cw,cd);
+  done.has(did) ? done.delete(did) : done.add(did);
+  save(); render();
+}
+
+// ══════════════════════════════════════════════════
+// SERVICE WORKER
+// ══════════════════════════════════════════════════
+
+if('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+
+render();
+</script>
+</body>
+</html>
