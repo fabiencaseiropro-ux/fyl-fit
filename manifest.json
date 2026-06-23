@@ -1,17 +1,24 @@
 {
   "name": "FYL Fit — Callisthénie 1 Mois",
   "short_name": "FYL Fit",
-  "description": "Programme callisthénie 4 semaines personnalisé Fabien",
-  "start_url": "/index.html",
+  "description": "Programme callisthénie 4 semaines personnalisé",
+  "start_url": "/fyl-fit/",
+  "scope": "/fyl-fit/",
   "display": "standalone",
   "background_color": "#0D0D0D",
   "theme_color": "#FF5500",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]
